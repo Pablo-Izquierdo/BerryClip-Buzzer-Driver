@@ -1,5 +1,7 @@
 # BerryClip-Driver
 
+Everything is in assembly code for a raspberry with a berryclip
+
 ## Drivers files
 driver_gpio = Driver for the inputs/outputs pins
 
