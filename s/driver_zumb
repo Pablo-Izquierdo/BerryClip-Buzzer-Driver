@@ -1,0 +1,43 @@
+.data
+
+
+.text
+.extern driver_gpio
+.globl gen_tono
+
+gen_tono:
+
+STMDB SP!, {R4-R6,LR}
+
+MOV R4,R0
+MOV R5,R1
+MOV R2,#700
+MUL R6,R2,R4
+LSR R6,R6,#2
+
+WHILESEG:
+CMP R5,#0
+BEQ FIN
+
+    MOV R0,#4
+    MOV R1,#1
+    BL valor_gpio
+    MOV R0,R6
+    WHILET:
+    SUBS R0,R0,#1
+    BNE WHILET
+
+    MOV R0,#4
+    MOV R1,#0
+    BL valor_gpio
+    MOV R0,R6
+    WHILET2:
+    SUBS R0,R0,#1
+    BNE WHILET2
+
+
+SUB R5,R5,#1
+B WHILESEG
+
+FIN:
+LDMIA SP!,{R4-R6,PC}

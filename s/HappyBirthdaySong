@@ -1,0 +1,209 @@
+.data
+.align 2
+.equ sol3, 5102
+.equ sols3, 4816
+.equ la3, 4500
+.equ las3, 4290
+.equ si3, 4049
+
+.equ do4, 3822
+.equ dos4, 3608
+.equ re4, 3405
+.equ res4, 3214
+.equ mi4, 3034
+.equ fa4, 2863
+.equ fas4, 2703
+.equ sol4, 2551
+.equ sols4, 2408
+.equ la4, 2273
+.equ las4, 2145
+.equ si4, 2025
+
+.equ do5, 1911
+.equ dos5, 1804
+.equ re5, 1703
+.equ res5, 1607
+.equ mi5, 1517
+.equ fa5, 1432
+.equ fas5, 1351
+.equ sol5, 1275
+.equ sols5, 1203
+.equ la5, 1136
+.equ las5, 1072
+.equ si5, 1012
+
+.equ do6, 955
+.equ dos6, 902
+.equ re6, 851
+.equ res6, 803
+.equ mi6, 758
+.equ fa6, 716
+.equ fas6, 675
+.equ sol6, 637
+.equ sols6, 602
+.equ la6, 568
+.equ las6, 536
+.equ si6, 506
+
+.equ do7, 478
+.equ dos7, 440
+.equ re7, 425
+.equ res7, 402
+.equ mi7, 379
+.equ fa7, 358
+.equ sol7,318
+
+@pongo las frecuencias de las notas para calcular el tiempo
+
+.equ fdo4, 261
+.equ fdos4, 277
+.equ fre4, 293
+.equ fres4, 311
+.equ fmi4, 329
+.equ ffa4, 349
+.equ ffas4, 369
+.equ fsol4, 392
+.equ fsols4, 415
+.equ fla4, 440
+.equ flas4, 466
+.equ fsi4, 494
+
+.equ fdo5, 523
+.equ fdos5, 554
+.equ fre5, 587
+.equ fres5, 622
+.equ fmi5, 659
+.equ ffa5, 698
+.equ ffas5, 740
+.equ fsol5, 784
+.equ fsols5, 830
+.equ fla5, 880
+.equ flas5, 932
+.equ fsi5, 987
+
+.equ fdo6, 1046
+.equ fdos6, 1108
+.equ fre6, 1174
+.equ fres6, 1244
+.equ fmi6, 1318
+.equ ffa6, 1397
+.equ ffas6, 1480
+.equ fsol6, 1568
+.equ fsols6, 1661
+.equ fla6, 1760
+.equ flas6, 1864
+.equ fsi6, 1975
+
+.equ fdo7, 2093
+.equ fdos7, 2217
+.equ fre7, 2349
+.equ fres7, 2489
+.equ fmi7, 2637
+.equ ffa7, 2794
+.equ fsol7,3136
+
+.equ blnp, 1
+.equ bln, 2
+.equ negp, 3
+.equ neg, 4
+@.equ corp, 5
+.equ cor, 5
+.equ fsilencio, 1
+.equ ffsilencio, 1
+.equ fin, 0
+
+Periodo: .hword sol5,sol5,la5,sol5,do6,si5,sol5,sol5,la5,sol5,re6,do6,do6,mi6,  sol6,mi6,do6,si5,la5,fa6,fa6,mi6,do6,re6,do6,sol5,sol5,la5,sol5,do6,  si5,sol5,sol5,la5,sol5,re6,do6,do6,mi6,sol6,mi6,do6,si5,la5,fa6,fa6,mi6,do6,re6,do6,fin
+
+Frecuencia: .hword fsol5,fsol5,fla5,fsol5,fdo6,fsi5,fsol5,fsol5,fla5,fsol5,fre6,fdo6,fdo6,fmi6,  fsol6,fmi6,fdo6,fsi5,fla5,ffa6,ffa6,fmi6,fdo6,fre6,fdo6,fsol5,fsol5,fla5,fsol5,fdo6,  fsi5,fsol5,fsol5,fla5,fsol5,fre6,fdo6,fdo6,fmi6,fsol6,fmi6,fdo6,fsi5,fla5,ffa6,ffa6,fmi6,fdo6,fre6,fdo6,fin
+
+Tiempo: .hword cor,cor,neg,neg,neg,bln,cor,cor,neg,neg,neg,bln,cor,cor,neg,neg,neg,neg,neg,cor,cor,neg,neg,neg,bln,cor,cor,neg,neg,neg,bln,cor,cor,neg,neg,neg,bln,cor,cor,neg,neg,neg,neg,neg,cor,cor,neg,neg,neg,bln,fin
+
+.align 2
+Sneg: .word 250000
+
+
+.text
+.extern driver_gpio
+.extern driver_zumb
+.globl _start
+_start:
+
+MOV R0,#4
+MOV R1,#1
+BL prog_gpio
+
+LDR R5, =Periodo
+LDRH R4,[R5]
+LDR R7,=Frecuencia
+LDRH R6,[R7]
+LDR R8,=Tiempo
+LDRH R9,[R8]
+
+WHILECAN:
+CMP R4,#0
+BEQ FIN
+    CMP R4,#1   @Compruebo si el periodo es 1 y hago el silencio
+    BEQ SILENCIO
+
+    @Calculo los tiempos de las notas
+    CMP R9,#1
+    BNE BLN
+        MOV R0,R6 @Copio la frecuencia
+        LSR R0,#1 @blanca
+        LSR R6,#2 @negra
+        ADD R9,R0,R6
+        B NOTA
+    BLN:
+    CMP R9,#2
+    BNE NEGP
+        LSR R9,R6,#1 @blanca
+        B NOTA
+    NEGP:
+    CMP R9,#3
+    BNE NEG
+        MOV R0,R6
+        LSR R0,#2 @negra
+        LSR R6,#3 @corchea
+        ADD R9,R0,R6
+        B NOTA
+    NEG:
+    CMP R9,#4
+    BNE COR
+        LSR R9,R6,#2 @negra
+        B NOTA
+    COR:
+    CMP R9,#5
+    BNE FIN          @Hay un error
+         LSR R9,R6,#3  @corchea
+
+    NOTA:
+    MOV R0,R4
+    MOV R1,R9
+    BL gen_tono
+    SIGNOTA:
+    ADD R5,R5,#2
+    ADD R7,R7,#2
+    ADD R8,R8,#2
+    LDRH R4,[R5]
+    LDRH R6,[R7]
+    LDRH R9,[R8]
+
+    B WHILECAN
+
+SILENCIO:
+
+LDR R0,=Sneg
+LDR R0,[R0]
+MOV R1,#1
+BL gen_tono
+B SIGNOTA
+
+FIN:
+
+SWI 0x11
+
+
+
+
+
+
